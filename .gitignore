@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+._*
+
+# ambiente local
+.env
+
+# dbt artifacts
+target/
+dbt_packages/
+
+# Python
+__pycache__/
+*.pyc

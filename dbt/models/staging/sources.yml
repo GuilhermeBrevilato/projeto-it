@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Camada bruta com os eventos JSON recebidos dos gateways ESP32 do Projeto IT."
+    database: "{{ env_var('GCP_PROJECT') }}"
+    schema: "{{ env_var('BQ_DATASET_RAW') }}"
+    tables:
+      - name: esp32_payload
+        description: "Tabela raw com os payloads JSON originais capturados pelos gateways ESP32."
+        columns:
+          - name: raw_payload

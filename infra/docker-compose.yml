@@ -1,0 +1,23 @@
+services:
+  dbt:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    image: projeto-it-dbt:latest
+    container_name: projeto-it-dbt
+    working_dir: /mackenzie
+    volumes:
+      - ..:/mackenzie
+      - ${GOOGLE_APPLICATION_CREDENTIALS}:/secrets/gcp-key.json:ro
+    environment:
+      - DBT_PROFILES_DIR=/mackenzie
+      - GOOGLE_APPLICATION_CREDENTIALS=/secrets/gcp-key.json
+      - GCP_PROJECT=${GCP_PROJECT}
+      - BQ_LOCATION=${BQ_LOCATION}
+      - BQ_DATASET_RAW=${BQ_DATASET_RAW}
+      - BQ_DATASET_STAGING=${BQ_DATASET_STAGING}
+      - BQ_DATASET_INTERMEDIATE=${BQ_DATASET_INTERMEDIATE}
+      - BQ_DATASET_MARTS=${BQ_DATASET_MARTS}
+    command: dbt debug
+    stdin_open: true
+    tty: true

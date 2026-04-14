@@ -1,0 +1,18 @@
+# Git
+.git
+.gitignore
+
+# Environment files
+.env
+
+# macOS
+.DS_Store
+._*
+
+# dbt artifacts
+target
+dbt_packages
+
+# Python
+__pycache__
+*.pyc
