@@ -133,10 +133,10 @@ docker compose --env-file .env -f infra/docker-compose.yml run --rm dbt dbt test
 
 | Fase | Descrição | Status |
 |---|---|---|
-| Fase I | Fundação da plataforma | ✅ Concluída |
-| Fase II | Camada de ingestão (Cloud Run + Pub/Sub) | 🔄 Em andamento |
-| Fase III | Modelos dbt (staging → intermediate → marts) | ⏳ Pendente |
-| Fase IV | Dashboard (Looker Studio) | ⏳ Pendente |
+| Fase I | Fundação da plataforma | Concluída |
+| Fase II | Camada de ingestão (Cloud Run + Pub/Sub) | Em andamento |
+| Fase III | Modelos dbt (staging → intermediate → marts) | Pendente |
+| Fase IV | Dashboard (Looker Studio) | Pendente |
 
 ---
 
