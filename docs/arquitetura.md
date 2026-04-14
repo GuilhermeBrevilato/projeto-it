@@ -19,7 +19,7 @@ ESP32 → Cloud Run → Pub/Sub → BigQuery raw → dbt (staging → intermedia
 |---|---|
 | ESP32 | Coleta eventos BLE e envia via HTTP para o Cloud Run |
 | Cloud Run | Recebe o evento, adiciona metadados da plataforma e publica no Pub/Sub |
-| Pub/Sub | Desacopla a ingestão do destino final e garante entrega |
+| Pub/Sub | Desacopla a ingestão do destino final e gerencia a entrega assíncrona das mensagens |
 | BigQuery raw | Preserva o evento original sem transformação |
 | dbt staging | Extrai e tipifica os campos do JSON cru |
 | dbt intermediate | Aplica regras de negócio e enriquecimento |
@@ -116,7 +116,9 @@ projeto-it/
 ├── .gitignore
 ├── .dockerignore
 ├── dbt_project.yml
-├── profiles.yml
+├── profiles.yml                # Versionado como parte do setup containerizado e reproduzível.
+│                               # Valores sensíveis não são armazenados aqui;
+│                               # são injetados por variáveis de ambiente via .env.
 ├── requirements.txt
 └── README.md
 ```
@@ -127,11 +129,12 @@ projeto-it/
 
 | Serviço | Recurso | Função |
 |---|---|---|
+| Google Cloud Project | `projeto-it-dev` | Projeto GCP que agrupa todos os recursos da plataforma |
 | Cloud Run | `ingestion-api` | API HTTP que recebe eventos do ESP32 |
 | Pub/Sub | `ble-events-topic` | Tópico de mensageria |
 | Pub/Sub | `ble-events-to-bq-raw-sub` | Subscription que grava na raw |
-| BigQuery | `projeto-it-dev` | Data warehouse analítico |
-| Artifact Registry | — | Registro de imagens Docker |
+| BigQuery | `it_raw`, `it_staging`, `it_intermediate`, `it_marts` | Datasets da plataforma analítica |
+| Artifact Registry | — | Armazena a imagem Docker da API de ingestão utilizada no deploy do Cloud Run |
 
 ---
 
