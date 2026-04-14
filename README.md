@@ -1,8 +1,8 @@
 # projeto-it
 
-Sistema de rastreamento de pacientes em ambiente hospitalar utilizando sensores BLE e ESP32.
+Sistema de rastreamento de pacientes em ambiente hospitalar utilizando ESP32 como gateway BLE para captura de eventos de proximidade.
 
-Os eventos de proximidade coletados pelos dispositivos são ingeridos em tempo real, transformados em camadas analíticas e consumidos via dashboard.
+Os eventos BLE coletados pelos dispositivos são enviados para a nuvem, armazenados na camada bruta e posteriormente transformados em camadas analíticas para consumo em dashboard.
 
 ---
 
@@ -16,11 +16,29 @@ Para detalhes completos do fluxo, contratos do evento e estrutura do BigQuery, c
 
 ---
 
+## Contrato inicial do evento
+
+Exemplo de payload enviado pelo ESP32 para a API de ingestão:
+
+```json
+{
+  "gateway_id": "gw-teste-esp32-01",
+  "device_timestamp": "2026-03-25T20:30:00Z",
+  "tag_mac": "7c:ec:79:47:73:62",
+  "found": true,
+  "rssi": -66
+}
+```
+
+O Cloud Run enriquece esse payload com `ingested_at` antes de publicar no Pub/Sub. Detalhes completos em [`docs/arquitetura.md`](docs/arquitetura.md).
+
+---
+
 ## Stack
 
 | Camada | Tecnologia |
 |---|---|
-| Dispositivo | ESP32 + sensores BLE |
+| Dispositivo | ESP32 como gateway BLE + tags BLE |
 | Ingestão | Cloud Run (Python) |
 | Mensageria | Google Cloud Pub/Sub |
 | Data warehouse | Google BigQuery |
@@ -31,7 +49,7 @@ Para detalhes completos do fluxo, contratos do evento e estrutura do BigQuery, c
 
 ---
 
-## Estrutura do repositório
+## Estrutura planejada do repositório
 
 ```
 projeto-it/
@@ -99,9 +117,12 @@ BQ_DATASET_MARTS=it_marts
 GOOGLE_APPLICATION_CREDENTIALS=/caminho/local/para/sua-chave.json
 ```
 
-### 3. Configure o `profiles.yml`
+### 3. Sobre o `profiles.yml`
 
-O `profiles.yml` na raiz do projeto é um template. Para uso local fora do Docker, copie-o para `~/.dbt/profiles.yml` e ajuste o caminho da chave.
+O `profiles.yml` está versionado no repositório como parte do setup containerizado e reproduzível. Nenhum valor sensível é armazenado nele — as credenciais são injetadas via variáveis de ambiente.
+
+- **Dentro do Docker:** o `profiles.yml` da raiz é usado diretamente, com `DBT_PROFILES_DIR=/mackenzie`.
+- **Fora do Docker:** copie o `profiles.yml` para `~/.dbt/profiles.yml` e ajuste o caminho da chave JSON conforme seu ambiente local.
 
 ---
 
@@ -129,7 +150,19 @@ docker compose --env-file .env -f infra/docker-compose.yml run --rm dbt dbt test
 
 ---
 
-## Status do projeto
+## Status validado até o momento
+
+- ✅ Projeto GCP criado (`projeto-it-dev`)
+- ✅ Datasets BigQuery provisionados (`it_raw`, `it_staging`, `it_intermediate`, `it_marts`)
+- ✅ Tabela raw preparada para recebimento do payload bruto (`it_raw.esp32_payload`)
+- ✅ Pub/Sub configurado (tópico + subscription gravando na raw)
+- ✅ dbt local validado com BigQuery via Docker (`dbt debug` passou)
+
+A próxima etapa é a implementação da camada de ingestão em Cloud Run.
+
+---
+
+## Roadmap
 
 | Fase | Descrição | Status |
 |---|---|---|
