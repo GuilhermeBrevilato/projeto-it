@@ -152,11 +152,11 @@ docker compose --env-file .env -f infra/docker-compose.yml run --rm dbt dbt test
 
 ## Status validado até o momento
 
-- ✅ Projeto GCP criado (`projeto-it-dev`)
-- ✅ Datasets BigQuery provisionados (`it_raw`, `it_staging`, `it_intermediate`, `it_marts`)
-- ✅ Tabela raw preparada para recebimento do payload bruto (`it_raw.esp32_payload`)
-- ✅ Pub/Sub configurado (tópico + subscription gravando na raw)
-- ✅ dbt local validado com BigQuery via Docker (`dbt debug` passou)
+- Projeto GCP criado (`projeto-it-dev`)
+- Datasets BigQuery provisionados (`it_raw`, `it_staging`, `it_intermediate`, `it_marts`)
+- Tabela raw preparada para recebimento do payload bruto (`it_raw.esp32_payload`)
+- Pub/Sub configurado (tópico + subscription gravando na raw)
+- dbt local validado com BigQuery via Docker (`dbt debug` passou)
 
 A próxima etapa é a implementação da camada de ingestão em Cloud Run.
 
