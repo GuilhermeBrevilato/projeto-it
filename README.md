@@ -175,4 +175,4 @@ A próxima etapa é a implementação da camada de ingestão em Cloud Run.
 
 ## Contexto acadêmico
 
-Projeto desenvolvido como trabalho prático na **Universidade Presbiteriana Mackenzie**, com objetivo de aplicar conceitos de engenharia de dados em um cenário real de IoT hospitalar.
+Projeto desenvolvido como trabalho prático em conjunto com **Universidade Presbiteriana Mackenzie**, com objetivo de aplicar conceitos de engenharia de dados em um cenário real de IoT hospitalar.
