@@ -1,0 +1,57 @@
+[0m00:58:02.915700 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0xffff7cec7290>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0xffff7cec6a90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0xffff7e29be90>]}
+
+
+============================== 00:58:02.919185 | fd977607-754a-41db-8afd-fbdb381f3bb4 ==============================
+[0m00:58:02.919185 [info ] [MainThread]: Running with dbt=1.8.7
+[0m00:58:02.919696 [debug] [MainThread]: running dbt with arguments {'printer_width': '80', 'indirect_selection': 'eager', 'log_cache_events': 'False', 'write_json': 'True', 'partial_parse': 'True', 'cache_selected_only': 'False', 'profiles_dir': '/mackenzie', 'debug': 'False', 'warn_error': 'None', 'log_path': '/mackenzie/logs', 'fail_fast': 'False', 'version_check': 'True', 'use_colors': 'True', 'use_experimental_parser': 'False', 'no_print': 'None', 'quiet': 'False', 'empty': 'None', 'warn_error_options': 'WarnErrorOptions(include=[], exclude=[])', 'invocation_command': 'dbt debug', 'static_parser': 'True', 'introspect': 'True', 'target_path': 'None', 'log_format': 'default', 'send_anonymous_usage_stats': 'True'}
+[0m00:58:02.923505 [info ] [MainThread]: dbt version: 1.8.7
+[0m00:58:02.923837 [info ] [MainThread]: python version: 3.11.15
+[0m00:58:02.924209 [info ] [MainThread]: python path: /usr/local/bin/python3.11
+[0m00:58:02.924554 [info ] [MainThread]: os info: Linux-6.10.14-linuxkit-aarch64-with-glibc2.41
+[0m00:58:03.352909 [info ] [MainThread]: Using profiles dir at /mackenzie
+[0m00:58:03.353477 [info ] [MainThread]: Using profiles.yml file at /mackenzie/profiles.yml
+[0m00:58:03.353741 [info ] [MainThread]: Using dbt_project.yml file at /mackenzie/dbt_project.yml
+[0m00:58:03.354022 [info ] [MainThread]: adapter type: bigquery
+[0m00:58:03.354301 [info ] [MainThread]: adapter version: 1.8.2
+[0m00:58:03.387372 [info ] [MainThread]: Configuration:
+[0m00:58:03.387750 [info ] [MainThread]:   profiles.yml file [[32mOK found and valid[0m]
+[0m00:58:03.388078 [info ] [MainThread]:   dbt_project.yml file [[32mOK found and valid[0m]
+[0m00:58:03.388311 [info ] [MainThread]: Required dependencies:
+[0m00:58:03.388636 [debug] [MainThread]: Executing "git --help"
+[0m00:58:03.390919 [debug] [MainThread]: STDOUT: "b"usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]\n           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]\n           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]\n           [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]\n           [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]\n           <command> [<args>]\n\nThese are common Git commands used in various situations:\n\nstart a working area (see also: git help tutorial)\n   clone     Clone a repository into a new directory\n   init      Create an empty Git repository or reinitialize an existing one\n\nwork on the current change (see also: git help everyday)\n   add       Add file contents to the index\n   mv        Move or rename a file, a directory, or a symlink\n   restore   Restore working tree files\n   rm        Remove files from the working tree and from the index\n\nexamine the history and state (see also: git help revisions)\n   bisect    Use binary search to find the commit that introduced a bug\n   diff      Show changes between commits, commit and working tree, etc\n   grep      Print lines matching a pattern\n   log       Show commit logs\n   show      Show various types of objects\n   status    Show the working tree status\n\ngrow, mark and tweak your common history\n   branch    List, create, or delete branches\n   commit    Record changes to the repository\n   merge     Join two or more development histories together\n   rebase    Reapply commits on top of another base tip\n   reset     Reset current HEAD to the specified state\n   switch    Switch branches\n   tag       Create, list, delete or verify a tag object signed with GPG\n\ncollaborate (see also: git help workflows)\n   fetch     Download objects and refs from another repository\n   pull      Fetch from and integrate with another repository or a local branch\n   push      Update remote refs along with associated objects\n\n'git help -a' and 'git help -g' list available subcommands and some\nconcept guides. See 'git help <command>' or 'git help <concept>'\nto read about a specific subcommand or concept.\nSee 'git help git' for an overview of the system.\n""
+[0m00:58:03.391236 [debug] [MainThread]: STDERR: "b''"
+[0m00:58:03.391429 [info ] [MainThread]:  - git [[32mOK found[0m]
+
+[0m00:58:03.391620 [info ] [MainThread]: Connection:
+[0m00:58:03.391883 [info ] [MainThread]:   method: service-account
+[0m00:58:03.392122 [info ] [MainThread]:   database: projeto-it-dev
+[0m00:58:03.392326 [info ] [MainThread]:   execution_project: projeto-it-dev
+[0m00:58:03.392588 [info ] [MainThread]:   schema: it_staging
+[0m00:58:03.392747 [info ] [MainThread]:   location: US
+[0m00:58:03.392979 [info ] [MainThread]:   priority: interactive
+[0m00:58:03.393176 [info ] [MainThread]:   maximum_bytes_billed: None
+[0m00:58:03.393342 [info ] [MainThread]:   impersonate_service_account: None
+[0m00:58:03.393481 [info ] [MainThread]:   job_retry_deadline_seconds: None
+[0m00:58:03.393626 [info ] [MainThread]:   job_retries: 1
+[0m00:58:03.393786 [info ] [MainThread]:   job_creation_timeout_seconds: None
+[0m00:58:03.393966 [info ] [MainThread]:   job_execution_timeout_seconds: 300
+[0m00:58:03.394125 [info ] [MainThread]:   timeout_seconds: 300
+[0m00:58:03.394294 [info ] [MainThread]:   client_id: None
+[0m00:58:03.394452 [info ] [MainThread]:   token_uri: None
+[0m00:58:03.394640 [info ] [MainThread]:   dataproc_region: None
+[0m00:58:03.394859 [info ] [MainThread]:   dataproc_cluster_name: None
+[0m00:58:03.395122 [info ] [MainThread]:   gcs_bucket: None
+[0m00:58:03.395384 [info ] [MainThread]:   dataproc_batch: None
+[0m00:58:03.395653 [info ] [MainThread]: Registered adapter: bigquery=1.8.2
+[0m00:58:03.435892 [debug] [MainThread]: Acquiring new bigquery connection 'debug'
+[0m00:58:03.436237 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m00:58:03.465664 [debug] [MainThread]: On debug: select 1 as id
+[0m00:58:05.004199 [debug] [MainThread]: BigQuery adapter: https://console.cloud.google.com/bigquery?project=projeto-it-dev&j=bq:US:4a1b8fbe-65cc-4980-9f50-3d00981c7054&page=queryresults
+[0m00:58:05.636380 [info ] [MainThread]:   Connection test: [[32mOK connection ok[0m]
+
+[0m00:58:05.637276 [info ] [MainThread]: [32mAll checks passed![0m
+[0m00:58:05.639300 [debug] [MainThread]: Resource report: {"command_name": "debug", "command_success": true, "command_wall_clock_time": 2.7473156, "process_user_time": 2.19714, "process_kernel_time": 0.170866, "process_mem_max_rss": "221760", "process_in_blocks": "59184", "process_out_blocks": "13"}
+[0m00:58:05.640301 [debug] [MainThread]: Command `dbt debug` succeeded at 00:58:05.640208 after 2.75 seconds
+[0m00:58:05.640584 [debug] [MainThread]: Connection 'debug' was properly closed.
+[0m00:58:05.640883 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0xffff7cef9390>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0xffff7e29be90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0xffff5123ad10>]}
+[0m00:58:05.641229 [debug] [MainThread]: Flushing usage events

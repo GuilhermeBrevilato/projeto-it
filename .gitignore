@@ -8,8 +8,6 @@
 # dbt artifacts
 target/
 dbt_packages/
-logs/
-.user.yml
 
 # Python
 __pycache__/
