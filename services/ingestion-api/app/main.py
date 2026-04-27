@@ -38,8 +38,12 @@ def health():
 async def ingest(event: ESP32Event):
     message = {
         "ingested_at": datetime.now(timezone.utc).isoformat(),
-        "raw_payload": event.model_dump(mode="json")
-    }
+        "gateway_id": event.gateway_id,
+        "device_timestamp": event.device_timestamp.isoformat(),
+        "tag_mac": event.tag_mac,
+        "found": event.found,
+        "rssi": event.rssi
+}
 
     try:
         message_bytes = json.dumps(message).encode("utf-8")
