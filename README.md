@@ -128,6 +128,6 @@ Este projeto representa a união entre conhecimento operacional de saúde e tecn
 
 # Contato
 
-LinkedIn: inserir-linkedin  
+LinkedIn: https://linkedin.com/in/guilhermebrevilato 
 GitHub: https://github.com/GuilhermeBrevilato
 
