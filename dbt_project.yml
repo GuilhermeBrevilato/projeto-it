@@ -13,13 +13,10 @@ clean-targets: ["target", "dbt_packages"]
 models:
   projeto_it:
     staging:
-      +schema: staging
       +materialized: view
 
     intermediate:
-      +schema: intermediate
       +materialized: view
 
     marts:
-      +schema: marts
       +materialized: table
