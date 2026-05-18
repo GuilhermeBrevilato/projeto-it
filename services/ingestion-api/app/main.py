@@ -3,7 +3,7 @@ import logging
 import os
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Header, HTTPException
 from google.cloud import pubsub_v1
 from pydantic import BaseModel
 
@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ID = os.environ.get("GCP_PROJECT")
 TOPIC_ID = os.environ.get("PUBSUB_TOPIC_ID")
+API_KEY = os.environ.get("API_KEY")
 
 if not PROJECT_ID:
     logger.error("Variável de ambiente GCP_PROJECT não definida. Encerrando.")
@@ -24,6 +25,10 @@ if not PROJECT_ID:
 if not TOPIC_ID:
     logger.error("Variável de ambiente PUBSUB_TOPIC_ID não definida. Encerrando.")
     raise ValueError("PUBSUB_TOPIC_ID não definida")
+
+if not API_KEY:
+    logger.error("Variável de ambiente API_KEY não definida. Encerrando.")
+    raise ValueError("API_KEY não definida")
 
 # ---------------------------------------------------------------------------
 # Publisher instanciado uma vez, fora de qualquer endpoint
@@ -58,7 +63,14 @@ def health():
 
 
 @app.post("/ingest")
-async def ingest(event: ESP32Event):
+async def ingest(
+    event: ESP32Event,
+    x_api_key: str = Header(alias="X-API-Key"),
+):
+    if x_api_key != API_KEY:
+        logger.warning("Requisição rejeitada: chave de API inválida.")
+        raise HTTPException(status_code=401, detail="Chave de API inválida.")
+
     message = {
         "ingested_at": datetime.now(timezone.utc).isoformat(),
         "gateway_id": event.gateway_id,
