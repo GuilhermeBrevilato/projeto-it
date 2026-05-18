@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from datetime import datetime, timezone
+from typing import List
 
 from fastapi import FastAPI, Header, HTTPException
 from google.cloud import pubsub_v1
@@ -57,6 +58,24 @@ class ESP32Event(BaseModel):
     rssi: int
 
 
+def publish_event(event: ESP32Event) -> dict:
+    """Publica um único evento no Pub/Sub e retorna a mensagem montada."""
+    message = {
+        "ingested_at": datetime.now(timezone.utc).isoformat(),
+        "gateway_id": event.gateway_id,
+        "device_timestamp": event.device_timestamp.isoformat(),
+        "tag_mac": event.tag_mac,
+        "found": event.found,
+        "rssi": event.rssi,
+    }
+
+    message_bytes = json.dumps(message).encode("utf-8")
+    future = publisher.publish(topic_path, message_bytes)
+    future.result()
+
+    return message
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -71,19 +90,8 @@ async def ingest(
         logger.warning("Requisição rejeitada: chave de API inválida.")
         raise HTTPException(status_code=401, detail="Chave de API inválida.")
 
-    message = {
-        "ingested_at": datetime.now(timezone.utc).isoformat(),
-        "gateway_id": event.gateway_id,
-        "device_timestamp": event.device_timestamp.isoformat(),
-        "tag_mac": event.tag_mac,
-        "found": event.found,
-        "rssi": event.rssi,
-    }
-
     try:
-        message_bytes = json.dumps(message).encode("utf-8")
-        future = publisher.publish(topic_path, message_bytes)
-        future.result()
+        message = publish_event(event)
     except Exception as e:
         logger.error("Falha ao publicar no Pub/Sub: %s", e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -93,4 +101,40 @@ async def ingest(
     return {
         "status": "ok",
         "ingested_at": message["ingested_at"],
+    }
+
+
+@app.post("/ingest/batch")
+async def ingest_batch(
+    events: List[ESP32Event],
+    x_api_key: str = Header(alias="X-API-Key"),
+):
+    if x_api_key != API_KEY:
+        logger.warning("Requisição rejeitada: chave de API inválida.")
+        raise HTTPException(status_code=401, detail="Chave de API inválida.")
+
+    if not events:
+        raise HTTPException(status_code=400, detail="Lista de eventos vazia.")
+
+    if len(events) > 500:
+        raise HTTPException(status_code=400, detail="Máximo de 500 eventos por lote.")
+
+    published = 0
+    failed = 0
+
+    for event in events:
+        try:
+            publish_event(event)
+            published += 1
+        except Exception as e:
+            logger.error("Falha ao publicar evento gateway_id=%s: %s", event.gateway_id, e)
+            failed += 1
+
+    logger.info("Batch concluído. published=%d failed=%d", published, failed)
+
+    return {
+        "status": "ok",
+        "published": published,
+        "failed": failed,
+        "total": len(events),
     }
