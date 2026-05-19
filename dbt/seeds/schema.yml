@@ -1,0 +1,24 @@
+version: 2
+
+seeds:
+  - name: beacons
+    description: "Mapeamento de beacons BLE para grupos clínicos."
+    columns:
+      - name: tag_mac
+        description: "Endereço MAC do beacon no formato aa:bb:cc:dd:ee:ff."
+      - name: grupo
+        description: "Grupo clínico: idoso, mobilidade_reduzida ou jovem."
+      - name: descricao
+        description: "Descrição do grupo clínico."
+
+  - name: gateways
+    description: "Mapeamento de gateways ESP32 para locais físicos."
+    columns:
+      - name: gateway_id
+        description: "Identificador do gateway ESP32."
+      - name: local
+        description: "Nome do local onde o gateway está instalado."
+      - name: andar
+        description: "Andar do local."
+      - name: descricao
+        description: "Descrição detalhada do local."

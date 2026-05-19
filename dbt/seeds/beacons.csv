@@ -1,0 +1,4 @@
+tag_mac,grupo,descricao
+7c:ec:79:47:73:62,idoso,Pacientes com 60 anos ou mais
+d4:f5:13:79:e4:5b,mobilidade_reduzida,Pacientes cadeirantes ou com dificuldade de locomoção
+7c:ec:79:44:e0:5f,jovem,Pacientes com menos de 60 anos sem restrição de mobilidade

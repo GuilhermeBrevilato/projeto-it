@@ -5,6 +5,7 @@ config-version: 2
 profile: projeto_it
 
 model-paths: ["dbt/models"]
+seed-paths: ["dbt/seeds"]
 test-paths: ["dbt/tests"]
 macro-paths: ["dbt/macros"]
 target-path: "target"
@@ -14,9 +15,7 @@ models:
   projeto_it:
     staging:
       +materialized: view
-
     intermediate:
       +materialized: view
-
     marts:
       +materialized: table

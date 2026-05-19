@@ -1,0 +1,4 @@
+gateway_id,local,andar,descricao
+gw-esp32-01,Recepção,Térreo,Entrada principal do ambulatório
+gw-esp32-02,Sala de Espera,Térreo,Área de espera antes do atendimento
+gw-esp32-03,Consultório 1,Térreo,Sala de atendimento médico
