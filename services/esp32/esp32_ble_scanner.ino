@@ -5,7 +5,6 @@
  *  1. Conecta WiFi e sincroniza NTP
  *  2. Desliga WiFi — libera antena para BLE
  *  3. BLE scan contínuo por COLLECT_DURATION_MS
- *     → a cada SCAN_INTERVAL_MS armazena {timestamp, found, rssi}
  *  4. Deinit BLE — reconecta WiFi
  *  5. HTTP POST batch com todos os registros
  *  6. Reinicia o ciclo via esp_restart()
@@ -32,25 +31,17 @@
 #include <BLEScan.h>
 #include <BLEAdvertisedDevice.h>
 
-// ──────────────────────────────────────────────
-//  Configurações
-// ──────────────────────────────────────────────
-namespace Cfg {
-  constexpr char WIFI_SSID[]    = "VIVOFIBRA-5318";
-  constexpr char WIFI_PASS[]    = "E645BE7091";
+#include "config.h"
 
-  constexpr char API_URL[]      = "https://ingestion-api-744027147092.us-central1.run.app/ingest/batch";
-  constexpr char API_KEY[]      = "DkZU2gICJnTGWcwADqsHekwitwI6-PBkIydLC89n3C0";
-  constexpr char GATEWAY_ID[]   = "gw-esp32-01";
-  constexpr char TARGET_MAC[]   = "7c:ec:79:47:73:62";
-
-  constexpr uint32_t COLLECT_DURATION_MS = 3UL * 60UL * 1000UL;
-  constexpr uint32_t SCAN_INTERVAL_MS    = 3000;
-  constexpr uint32_t SCAN_DURATION_SEC   = 2;
-  constexpr uint32_t WIFI_TIMEOUT_MS     = 15000;
-  constexpr uint32_t WDT_TIMEOUT_SEC     = 60;
-  constexpr uint16_t MAX_RECORDS         = 100;
-}
+// ──────────────────────────────────────────────
+//  Configurações de timing
+// ──────────────────────────────────────────────
+constexpr uint32_t COLLECT_DURATION_MS = 20UL * 60UL * 1000UL;
+constexpr uint32_t SCAN_INTERVAL_MS    = 4000;
+constexpr uint32_t SCAN_DURATION_SEC   = 3;
+constexpr uint32_t WIFI_TIMEOUT_MS     = 15000;
+constexpr uint32_t WDT_TIMEOUT_SEC     = 60;
+constexpr uint16_t MAX_RECORDS         = 250;
 
 // ──────────────────────────────────────────────
 //  Estrutura de um registro coletado
@@ -64,7 +55,7 @@ struct BLERecord {
 // ──────────────────────────────────────────────
 //  Buffer de coleta
 // ──────────────────────────────────────────────
-BLERecord records[Cfg::MAX_RECORDS];
+BLERecord records[MAX_RECORDS];
 uint16_t  recordCount = 0;
 
 // ──────────────────────────────────────────────
@@ -82,31 +73,14 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
     strlcpy(buf, advertisedDevice.getAddress().toString().c_str(), sizeof(buf));
     for (int i = 0; buf[i]; i++) buf[i] = tolower((unsigned char)buf[i]);
 
-    if (strcmp(buf, Cfg::TARGET_MAC) == 0) {
+    if (strcmp(buf, TARGET_MAC) == 0) {
       g_rssi  = (int8_t)advertisedDevice.getRSSI();
       g_found = true;
-      BLEDevice::getScan()->stop();
     }
   }
 };
 
 MyAdvertisedDeviceCallbacks bleCallbacks;
-
-// ──────────────────────────────────────────────
-//  Um ciclo de scan BLE
-// ──────────────────────────────────────────────
-void scanOnce() {
-  g_found = false;
-  g_rssi  = -127;
-
-  BLEScan* pScan = BLEDevice::getScan();
-  pScan->setAdvertisedDeviceCallbacks(&bleCallbacks, false);
-  pScan->setActiveScan(false);
-  pScan->setInterval(100);
-  pScan->setWindow(99);
-  pScan->start(Cfg::SCAN_DURATION_SEC, false);
-  pScan->clearResults();
-}
 
 // ──────────────────────────────────────────────
 //  WiFi
@@ -115,11 +89,11 @@ bool connectWiFi() {
   if (WiFi.status() == WL_CONNECTED) return true;
 
   WiFi.mode(WIFI_STA);
-  WiFi.begin(Cfg::WIFI_SSID, Cfg::WIFI_PASS);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
 
   uint32_t t0 = millis();
   while (WiFi.status() != WL_CONNECTED) {
-    if (millis() - t0 > Cfg::WIFI_TIMEOUT_MS) {
+    if (millis() - t0 > WIFI_TIMEOUT_MS) {
       Serial.println("[WiFi] Timeout!");
       return false;
     }
@@ -136,7 +110,7 @@ bool connectWiFi() {
 // ──────────────────────────────────────────────
 bool syncNTP() {
   configTime(0, 0, "pool.ntp.org", "time.google.com");
-  Serial.print("[NTP] Sincronizando");
+  Serial.print("[NTP] Sincronizando.");
 
   time_t now = 0;
   uint32_t t0 = millis();
@@ -180,9 +154,9 @@ bool postBatch() {
 
   for (uint16_t i = 0; i < recordCount; i++) {
     JsonObject obj = array.createNestedObject();
-    obj["gateway_id"]       = Cfg::GATEWAY_ID;
+    obj["gateway_id"]       = GATEWAY_ID;
     obj["device_timestamp"] = records[i].timestamp;
-    obj["tag_mac"]          = Cfg::TARGET_MAC;
+    obj["tag_mac"]          = TARGET_MAC;
     obj["found"]            = records[i].found;
     obj["rssi"]             = records[i].rssi;
   }
@@ -194,9 +168,10 @@ bool postBatch() {
                 recordCount, payload.length());
 
   HTTPClient http;
-  http.begin(Cfg::API_URL);
+  http.begin(API_URL);
   http.addHeader("Content-Type", "application/json");
-  http.addHeader("X-API-Key", Cfg::API_KEY);
+  http.addHeader("Content-Length", String(payload.length()));
+  http.addHeader("X-API-Key", API_KEY);
   http.setTimeout(30000);
 
   int httpCode = http.POST(payload);
@@ -220,8 +195,9 @@ void setup() {
   delay(200);
   Serial.println("\n=== Projeto IT — iniciando ===");
 
+  // Watchdog
   const esp_task_wdt_config_t wdt_cfg = {
-    .timeout_ms     = Cfg::WDT_TIMEOUT_SEC * 1000,
+    .timeout_ms     = WDT_TIMEOUT_SEC * 1000,
     .idle_core_mask = 0,
     .trigger_panic  = true
   };
@@ -246,8 +222,13 @@ void setup() {
   WiFi.mode(WIFI_OFF);
   Serial.println("[WiFi] Desligado para coleta BLE.");
 
-  // 3. Inicializa BLE uma única vez
+  // 3. Inicializa BLE e configura scan uma única vez
   BLEDevice::init("");
+  BLEScan* pScan = BLEDevice::getScan();
+  pScan->setAdvertisedDeviceCallbacks(&bleCallbacks, false);
+  pScan->setActiveScan(false);
+  pScan->setInterval(100);
+  pScan->setWindow(99);
   Serial.printf("[BLE] Iniciado. Heap: %u\n", ESP.getFreeHeap());
 
   // 4. Coleta por COLLECT_DURATION_MS
@@ -255,33 +236,39 @@ void setup() {
   uint32_t collectStart = millis();
 
   Serial.printf("[COLETA] Iniciando. Duração: %lu min. Intervalo: %lu s.\n",
-                Cfg::COLLECT_DURATION_MS / 60000,
-                Cfg::SCAN_INTERVAL_MS / 1000);
+                COLLECT_DURATION_MS / 60000,
+                SCAN_INTERVAL_MS / 1000);
 
-  while (millis() - collectStart < Cfg::COLLECT_DURATION_MS) {
+  while (millis() - collectStart < COLLECT_DURATION_MS) {
     esp_task_wdt_reset();
+
+    if (recordCount >= MAX_RECORDS) {
+      Serial.println("[COLETA] Buffer cheio. Encerrando coleta.");
+      break;
+    }
 
     uint32_t scanStart = millis();
 
-    scanOnce();
+    g_found = false;
+    g_rssi  = -127;
+    pScan->start(SCAN_DURATION_SEC, false);
+    pScan->clearResults();
 
-    if (recordCount < Cfg::MAX_RECORDS) {
-      getCurrentTimestamp(records[recordCount].timestamp,
-                          sizeof(records[recordCount].timestamp));
-      records[recordCount].found = g_found;
-      records[recordCount].rssi  = g_rssi;
-      recordCount++;
+    getCurrentTimestamp(records[recordCount].timestamp,
+                        sizeof(records[recordCount].timestamp));
+    records[recordCount].found = g_found;
+    records[recordCount].rssi  = g_rssi;
+    recordCount++;
 
-      Serial.printf("[COLETA] #%03d  found=%s  rssi=%d  heap=%u\n",
-                    recordCount,
-                    g_found ? "true" : "false",
-                    g_rssi,
-                    ESP.getFreeHeap());
-    }
+    Serial.printf("[COLETA] #%03d  found=%s  rssi=%d  heap=%u\n",
+                  recordCount,
+                  g_found ? "true" : "false",
+                  g_rssi,
+                  ESP.getFreeHeap());
 
     uint32_t elapsed = millis() - scanStart;
-    if (elapsed < Cfg::SCAN_INTERVAL_MS) {
-      delay(Cfg::SCAN_INTERVAL_MS - elapsed);
+    if (elapsed < SCAN_INTERVAL_MS) {
+      delay(SCAN_INTERVAL_MS - elapsed);
     }
   }
 

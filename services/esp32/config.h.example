@@ -1,0 +1,15 @@
+#pragma once
+
+// WiFi
+#define WIFI_SSID     "sua-rede-wifi"
+#define WIFI_PASS     "sua-senha-wifi"
+
+// API de ingestão
+#define API_URL       "https://sua-url.run.app/ingest/batch"
+#define API_KEY       "sua-chave-api"
+
+// Identificação do gateway
+#define GATEWAY_ID    "gw-esp32-01"
+
+// MAC da tag BLE alvo
+#define TARGET_MAC    "xx:xx:xx:xx:xx:xx"

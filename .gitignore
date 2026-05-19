@@ -12,3 +12,4 @@ dbt_packages/
 # Python
 __pycache__/
 *.pyc
+services/esp32/config.h
