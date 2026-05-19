@@ -6,7 +6,7 @@
  *  2. Desliga WiFi — libera antena para BLE
  *  3. BLE scan contínuo por COLLECT_DURATION_MS
  *  4. Deinit BLE — reconecta WiFi
- *  5. HTTP POST batch com todos os registros
+ *  5. HTTP POST em sub-lotes de 50 registros
  *  6. Reinicia o ciclo via esp_restart()
  *
  * Dependências:
@@ -17,13 +17,12 @@
  * Partition Scheme: Huge APP (3MB No OTA/1MB SPIFFS)
  */
 
-
-
 // ──────────────────────────────────────────────
 //  Includes
 // ──────────────────────────────────────────────
 #include <Arduino.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include <esp_task_wdt.h>
@@ -35,16 +34,27 @@
 
 #include "config.h"
 
+// ──────────────────────────────────────────────
+//  Credenciais e configurações
+// ──────────────────────────────────────────────
+#define WIFI_SSID   "VIVOFIBRA-5318"
+#define WIFI_PASS   "E645BE7091"
+#define API_URL     "https://ingestion-api-744027147092.us-central1.run.app/ingest/batch"
+#define API_KEY     "DkZU2gICJnTGWcwADqsHekwitwI6-PBkIydLC89n3C0"
+#define GATEWAY_ID  "gw-esp32-01"
+#define TARGET_MAC  "7c:ec:79:47:73:62"
 
 // ──────────────────────────────────────────────
 //  Configurações de timing
 // ──────────────────────────────────────────────
-constexpr uint32_t COLLECT_DURATION_MS = 5UL * 60UL * 1000UL;
-constexpr uint32_t SCAN_INTERVAL_MS    = 4000;
-constexpr uint32_t SCAN_DURATION_SEC   = 3;
-constexpr uint32_t WIFI_TIMEOUT_MS     = 15000;
-constexpr uint32_t WDT_TIMEOUT_SEC     = 60;
-constexpr uint16_t MAX_RECORDS         = 250;
+constexpr uint32_t COLLECT_DURATION_MS  = 15UL * 60UL * 1000UL;
+constexpr uint32_t SCAN_INTERVAL_MS     = 4000;
+constexpr uint32_t SCAN_DURATION_SEC    = 3;
+constexpr uint32_t WIFI_TIMEOUT_MS      = 15000;
+constexpr uint32_t WDT_TIMEOUT_MS       = 25UL * 60UL * 1000UL;
+constexpr uint16_t MAX_RECORDS          = 350;
+constexpr uint32_t HTTP_TIMEOUT_MS      = 30000;
+constexpr uint8_t  BATCH_SIZE           = 50;
 
 // ──────────────────────────────────────────────
 //  Estrutura de um registro coletado
@@ -143,19 +153,14 @@ void getCurrentTimestamp(char* buf, size_t len) {
 }
 
 // ──────────────────────────────────────────────
-//  Envia batch para a API
+//  Envia um sub-lote de registros
 // ──────────────────────────────────────────────
-bool postBatch() {
-  if (recordCount == 0) {
-    Serial.println("[HTTP] Nenhum registro para enviar.");
-    return true;
-  }
-
-  const size_t jsonSize = 10 + (recordCount * 150);
+bool postSubBatch(uint16_t start, uint16_t count) {
+  const size_t jsonSize = 16 + (count * 150);
   DynamicJsonDocument doc(jsonSize);
   JsonArray array = doc.to<JsonArray>();
 
-  for (uint16_t i = 0; i < recordCount; i++) {
+  for (uint16_t i = start; i < start + count; i++) {
     JsonObject obj = array.createNestedObject();
     obj["gateway_id"]       = GATEWAY_ID;
     obj["device_timestamp"] = records[i].timestamp;
@@ -165,29 +170,78 @@ bool postBatch() {
   }
 
   String payload;
+  payload.reserve(measureJson(doc) + 10);
   serializeJson(doc, payload);
 
-  Serial.printf("[HTTP] Enviando %d registros (%d bytes)...\n",
-                recordCount, payload.length());
+  Serial.printf("[HTTP] Sub-lote %d-%d (%d bytes). Heap: %u\n",
+                start + 1, start + count, payload.length(), ESP.getFreeHeap());
 
-  HTTPClient http;
-  http.begin(API_URL);
-  http.addHeader("Content-Type", "application/json");
-  http.addHeader("Content-Length", String(payload.length()));
-  http.addHeader("X-API-Key", API_KEY);
-  http.setTimeout(30000);
+  for (uint8_t attempt = 1; attempt <= 3; attempt++) {
+    esp_task_wdt_reset();
 
-  int httpCode = http.POST(payload);
+    WiFiClientSecure client;
+    client.setInsecure();
 
-  if (httpCode > 0) {
-    Serial.printf("[HTTP] Resposta: %d  Body: %s\n",
-                  httpCode, http.getString().c_str());
-  } else {
-    Serial.printf("[HTTP] Erro: %s\n", http.errorToString(httpCode).c_str());
+    HTTPClient http;
+    http.begin(client, API_URL);
+    http.addHeader("Content-Type", "application/json");
+    http.addHeader("Content-Length", String(payload.length()));
+    http.addHeader("X-API-Key", API_KEY);
+    http.setTimeout(HTTP_TIMEOUT_MS);
+
+    int httpCode = http.POST(payload);
+    http.end();
+
+    if (httpCode == 200) {
+      Serial.printf("[HTTP] OK (tentativa %d)\n", attempt);
+      return true;
+    }
+
+    Serial.printf("[HTTP] Falhou código %d: %s (tentativa %d/3)\n",
+                  httpCode, http.errorToString(httpCode).c_str(), attempt);
+
+    if (attempt < 3) {
+      delay(5000);
+      esp_task_wdt_reset();
+    }
   }
 
-  http.end();
-  return httpCode == 200;
+  return false;
+}
+
+// ──────────────────────────────────────────────
+//  Envia todos os registros em sub-lotes
+// ──────────────────────────────────────────────
+void postAllBatches() {
+  if (recordCount == 0) {
+    Serial.println("[HTTP] Nenhum registro para enviar.");
+    return;
+  }
+
+  uint16_t totalBatches = (recordCount + BATCH_SIZE - 1) / BATCH_SIZE;
+  Serial.printf("[HTTP] Enviando %d registros em %d sub-lotes de %d.\n",
+                recordCount, totalBatches, BATCH_SIZE);
+
+  uint16_t sent = 0;
+  uint16_t failed = 0;
+
+  for (uint16_t b = 0; b < totalBatches; b++) {
+    uint16_t start = b * BATCH_SIZE;
+    uint16_t count = min((uint16_t)BATCH_SIZE, (uint16_t)(recordCount - start));
+
+    if (postSubBatch(start, count)) {
+      sent += count;
+    } else {
+      failed += count;
+      Serial.printf("[HTTP] Sub-lote %d falhou. Continuando...\n", b + 1);
+    }
+
+    esp_task_wdt_reset();
+    delay(500);
+  }
+
+  Serial.printf("[HTTP] Concluído. Enviados: %d  Falharam: %d  Total: %d\n",
+                sent, failed, recordCount);
 }
 
 // ──────────────────────────────────────────────
@@ -198,9 +252,10 @@ void setup() {
   delay(200);
   Serial.println("\n=== Projeto IT — iniciando ===");
 
-  // Watchdog
+  disableLoopWDT();
+
   const esp_task_wdt_config_t wdt_cfg = {
-    .timeout_ms     = WDT_TIMEOUT_SEC * 1000,
+    .timeout_ms     = WDT_TIMEOUT_MS,
     .idle_core_mask = 0,
     .trigger_panic  = true
   };
@@ -223,6 +278,7 @@ void setup() {
   // 2. Desliga WiFi — libera antena para BLE
   WiFi.disconnect(true);
   WiFi.mode(WIFI_OFF);
+  delay(200);
   Serial.println("[WiFi] Desligado para coleta BLE.");
 
   // 3. Inicializa BLE e configura scan uma única vez
@@ -280,17 +336,18 @@ void setup() {
   Serial.printf("[BLE] Deinit. Heap: %u\n", ESP.getFreeHeap());
 
   delay(500);
+  esp_task_wdt_reset();
 
   if (!connectWiFi()) {
     Serial.println("[ERRO] WiFi falhou no envio. Reiniciando...");
     esp_restart();
   }
 
-  delay(1000);
+  delay(2000);
   esp_task_wdt_reset();
 
-  // 6. Envia batch
-  postBatch();
+  // 6. Envia todos os registros em sub-lotes
+  postAllBatches();
   esp_task_wdt_reset();
 
   // 7. Reinicia o ciclo
