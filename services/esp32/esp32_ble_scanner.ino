@@ -17,6 +17,8 @@
  * Partition Scheme: Huge APP (3MB No OTA/1MB SPIFFS)
  */
 
+
+
 // ──────────────────────────────────────────────
 //  Includes
 // ──────────────────────────────────────────────
@@ -33,10 +35,11 @@
 
 #include "config.h"
 
+
 // ──────────────────────────────────────────────
 //  Configurações de timing
 // ──────────────────────────────────────────────
-constexpr uint32_t COLLECT_DURATION_MS = 20UL * 60UL * 1000UL;
+constexpr uint32_t COLLECT_DURATION_MS = 5UL * 60UL * 1000UL;
 constexpr uint32_t SCAN_INTERVAL_MS    = 4000;
 constexpr uint32_t SCAN_DURATION_SEC   = 3;
 constexpr uint32_t WIFI_TIMEOUT_MS     = 15000;
@@ -272,14 +275,18 @@ void setup() {
     }
   }
 
-  // 5. Deinit BLE — reconecta WiFi
+  // 5. Deinit BLE — aguarda e reconecta WiFi
   BLEDevice::deinit(true);
   Serial.printf("[BLE] Deinit. Heap: %u\n", ESP.getFreeHeap());
+
+  delay(500);
 
   if (!connectWiFi()) {
     Serial.println("[ERRO] WiFi falhou no envio. Reiniciando...");
     esp_restart();
   }
+
+  delay(1000);
   esp_task_wdt_reset();
 
   // 6. Envia batch
