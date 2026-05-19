@@ -34,15 +34,6 @@
 
 #include "config.h"
 
-// ──────────────────────────────────────────────
-//  Credenciais e configurações
-// ──────────────────────────────────────────────
-#define WIFI_SSID   "VIVOFIBRA-5318"
-#define WIFI_PASS   "E645BE7091"
-#define API_URL     "https://ingestion-api-744027147092.us-central1.run.app/ingest/batch"
-#define API_KEY     "DkZU2gICJnTGWcwADqsHekwitwI6-PBkIydLC89n3C0"
-#define GATEWAY_ID  "gw-esp32-01"
-#define TARGET_MAC  "7c:ec:79:47:73:62"
 
 // ──────────────────────────────────────────────
 //  Configurações de timing
