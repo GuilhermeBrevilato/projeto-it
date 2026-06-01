@@ -8,11 +8,11 @@
 # dbt artifacts
 target/
 dbt_packages/
+logs/
 
 # Python
 __pycache__/
 *.pyc
+
+# ESP32
 services/esp32/config.h
-logs/
-target/
-.DS_Store
