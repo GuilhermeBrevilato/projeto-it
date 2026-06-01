@@ -9,6 +9,27 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U projeto_it -d projeto_it"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ../services/ingestion-api
+      dockerfile: Dockerfile
+    container_name: projeto_it_api
+    env_file:
+      - ../.env
+    environment:
+      - POSTGRES_HOST=postgres
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
 volumes:
   postgres_data:
