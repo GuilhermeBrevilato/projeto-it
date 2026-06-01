@@ -17,3 +17,4 @@ __pycache__/
 # ESP32
 services/esp32/config.h
 .venv/
+services/esp32/esp32_ble_scanner/config.h
