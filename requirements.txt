@@ -1,10 +1,3 @@
-# dbt
-dbt-core==1.8.7
-dbt-bigquery==1.8.2
-
-# Google Cloud
-google-cloud-storage==2.18.2
-google-cloud-bigquery==3.25.0
-
-# Utilitários
+dbt-core
+dbt-postgres
 python-dotenv==1.0.1

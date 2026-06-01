@@ -1,16 +1,15 @@
 version: 2
-
 sources:
   - name: raw
     description: "Camada bruta com os eventos recebidos dos gateways ESP32 via API de ingestão."
-    database: "{{ env_var('GCP_PROJECT') }}"
-    schema: "{{ env_var('BQ_DATASET_RAW') }}"
+    database: projeto_it
+    schema: it_raw
     tables:
       - name: esp32_payload
-        description: "Eventos BLE capturados pelos gateways ESP32 e publicados via Pub/Sub."
+        description: "Eventos BLE capturados pelos gateways ESP32."
         columns:
           - name: ingested_at
-            description: "Timestamp gerado pela plataforma no momento da recepção do evento."
+            description: "Timestamp gerado pela API no momento da recepção do evento."
           - name: gateway_id
             description: "Identificador do gateway ESP32 que captou o sinal."
           - name: device_timestamp
@@ -21,4 +20,3 @@ sources:
             description: "Se a tag estava dentro do alcance (true) ou foi perdida (false)."
           - name: rssi
             description: "Intensidade do sinal BLE em dBm. Quanto mais próximo de zero, mais forte."
-            

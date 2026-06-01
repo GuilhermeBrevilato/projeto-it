@@ -1,21 +1,21 @@
 name: projeto_it
 version: "1.0.0"
 config-version: 2
-
 profile: projeto_it
-
 model-paths: ["dbt/models"]
 seed-paths: ["dbt/seeds"]
 test-paths: ["dbt/tests"]
 macro-paths: ["dbt/macros"]
 target-path: "target"
 clean-targets: ["target", "dbt_packages"]
-
 models:
   projeto_it:
     staging:
       +materialized: view
+      +schema: it_staging
     intermediate:
       +materialized: view
+      +schema: it_intermediate
     marts:
       +materialized: table
+      +schema: it_marts

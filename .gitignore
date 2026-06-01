@@ -16,3 +16,4 @@ __pycache__/
 
 # ESP32
 services/esp32/config.h
+.venv/
