@@ -13,3 +13,4 @@ dbt_packages/
 __pycache__/
 *.pyc
 services/esp32/config.h
+logs/
