@@ -52,7 +52,7 @@ const char* BEACON_MACS[BEACON_COUNT] = {
 // ──────────────────────────────────────────────
 //  Configurações de timing
 // ──────────────────────────────────────────────
-constexpr uint32_t COLLECT_DURATION_MS  = 3UL * 60UL * 1000UL;
+constexpr uint32_t COLLECT_DURATION_MS  = 1UL * 60UL * 1000UL;
 constexpr uint32_t SCAN_INTERVAL_MS     = 4000;
 constexpr uint32_t SCAN_DURATION_SEC    = 3;
 constexpr uint32_t WIFI_TIMEOUT_MS      = 15000;
