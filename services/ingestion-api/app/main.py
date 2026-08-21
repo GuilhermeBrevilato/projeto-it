@@ -211,7 +211,7 @@ def api_trajeto():
         SELECT grupo, local, andar, chegada, saida,
                minutos_no_local, sessao_id
         FROM it_marts.mart_trajeto_do_dia
-        WHERE event_date = CURRENT_DATE
+        WHERE event_date = (SELECT MAX(event_date) FROM it_marts.mart_trajeto_do_dia)
         ORDER BY grupo, chegada
     """)
 
@@ -230,6 +230,6 @@ def api_trajeto_replay():
           AND e.is_valid_rssi = true
           AND e.grupo IS NOT NULL
           AND e.local IS NOT NULL
-          AND e.event_timestamp_utc >= current_timestamp - interval '15 minutes'
+          AND e.event_timestamp_utc >= (SELECT MAX(event_timestamp_utc) FROM it_intermediate.int_ble_events) - interval '15 minutes'
         ORDER BY e.event_timestamp_utc ASC
     """)
