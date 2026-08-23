@@ -2,6 +2,8 @@
 
 Projeto prático de Engenharia de Dados voltado ao rastreamento de deslocamento de pacientes em ambientes hospitalares utilizando sensores BLE e arquitetura cloud no Google Cloud Platform.
 
+> Esta branch (`main`) preserva a **arquitetura em nuvem (GCP)**, desenvolvida e validada na primeira fase do projeto. Após o encerramento do nível gratuito do GCP, o desenvolvimento foi migrado para uma **stack local containerizada** (PostgreSQL + FastAPI + dbt-postgres + Metabase), disponível na branch [`local`](../../tree/local). Ambas são mantidas como referência da evolução arquitetural do projeto.
+
 O objetivo é capturar eventos de proximidade em tempo real, estruturar um pipeline moderno de ingestão e transformar os dados em informações estratégicas para melhoria de fluxo interno, redução de congestionamentos e apoio à experiência do paciente.
 
 ---
@@ -28,7 +30,7 @@ Esses eventos são ingeridos, armazenados e transformados para análises operaci
 
 ---
 
-# Arquitetura atual
+# Arquitetura em nuvem (GCP)
 
 ```text
 ESP32
@@ -57,9 +59,9 @@ ESP32
 
 ---
 
-# Pipeline validado em produção
+# Pipeline validado na nuvem
 
-Atualmente o projeto já possui componentes reais implantados e funcionando:
+Na fase de nuvem, o projeto teve os seguintes componentes implantados e validados no GCP:
 
 - API containerizada publicada no Cloud Run
 - Endpoint `/health` validado
@@ -68,6 +70,8 @@ Atualmente o projeto já possui componentes reais implantados e funcionando:
 - Subscription escrevendo no BigQuery
 - Eventos ingeridos com sucesso na camada raw
 - Deploy versionado com revisions e rollout controlado
+
+> A infraestrutura de nuvem foi posteriormente descontinuada com o encerramento do nível gratuito do GCP; o código e o desenho de arquitetura permanecem preservados nesta branch para referência.
 
 ---
 
@@ -81,7 +85,7 @@ Isso simulou um cenário real de troubleshooting em pipelines produtivos.
 
 ---
 
-# Estrutura atual do repositório
+# Estrutura do repositório
 
 ```text
 projeto-it/
@@ -96,14 +100,14 @@ projeto-it/
 
 ---
 
-# Próximos passos
+# Evolução do projeto
 
-- Construção da camada staging no dbt
-- Modelagem analítica de deslocamento hospitalar
-- Dashboards operacionais
-- Heatmaps de movimentação
-- Métricas de tempo entre captura e ingestão
-- Alertas operacionais
+A partir desta base em nuvem, o projeto evoluiu para a stack local (branch [`local`](../../tree/local)), onde foram desenvolvidas as etapas seguintes:
+
+- Construção das camadas staging, intermediate e marts no dbt
+- Modelagem analítica de deslocamento (localização atual, tempo por local, ausências, trajeto)
+- Painel HTML autocontido com métricas e eventos
+- Coleta de base real de eventos BLE para validação do pipeline ponta a ponta
 
 ---
 
